@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ResNet Classifier</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    input, button {
+      margin: 1rem;
+    }
+    #preview {
+      max-width: 300px;
+      margin: 1rem auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload Gambar untuk Prediksi</h1>
+  <form id="uploadForm">
+    <input type="file" name="file" id="fileInput" accept="image/*" required />
+    <br>
+    <button type="submit">Kirim Gambar</button>
+  </form>
+
+  <img id="preview" src="" alt="" style="display: none;" />
+  <div id="result"></div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const preview = document.getElementById('preview');
+    const fileInput = document.getElementById('fileInput');
+    const resultDiv = document.getElementById('result');
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('http://44.196.58.193:5000/predict', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        resultDiv.innerHTML = `
+          <p><strong>Label:</strong> ${data.label}</p>
+          <p><strong>Confidence:</strong> ${(data.confidence * 100).toFixed(2)}%</p>
+        `;
+      } catch (err) {
+        resultDiv.innerHTML = '<p style="color:red">Gagal memprediksi. Pastikan backend aktif.</p>';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
