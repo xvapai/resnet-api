@@ -1,0 +1,29 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v3
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H 44.196.58.193 >> ~/.ssh/known_hosts
+
+    - name: Pull latest changes and restart API
+      run: |
+        ssh ubuntu@44.196.58.193 << 'EOF'
+          cd ~/image-api
+          git pull origin main
+          sudo systemctl restart flaskapi
+        EOF
